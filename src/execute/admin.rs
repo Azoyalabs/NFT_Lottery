@@ -1,10 +1,10 @@
-use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, Coin};
+use cosmwasm_std::{Coin, DepsMut, Env, MessageInfo, Response};
 
 use crate::error::ContractError;
 
 use crate::execute_messages::msg_admin::AdminExecuteMsg;
 use crate::state::{state_reads, state_writes};
-use crate::structs::{LotteryState, PrizePool, PrizeRegistered};
+use crate::structs::{LotteryStatus, PrizePool, PrizeRegistered};
 
 pub fn dispatch_admin(
     deps: DepsMut,
@@ -19,10 +19,16 @@ pub fn dispatch_admin(
     match admin_msg {
         AdminExecuteMsg::UpdateLotteryState { new_state } => {
             try_update_lottery_state(deps, new_state)
-        },
-        AdminExecuteMsg::StartNewLottery {  } => try_start_new_lottery(deps),
-        AdminExecuteMsg::SetPrizePool { target_id, prize_pool } => try_set_prize_pool(deps, target_id, prize_pool),
-        AdminExecuteMsg::SetEntryPrice { price} => try_set_entry_price(deps, price),
+        }
+        AdminExecuteMsg::StartNewLottery {} => try_start_new_lottery(deps),
+        AdminExecuteMsg::SetPrizePool {
+            target_id,
+            prize_pool,
+        } => try_set_prize_pool(deps, target_id, prize_pool),
+        AdminExecuteMsg::SetEntryPrice { price } => try_set_entry_price(deps, price),
+        
+        
+        
         _ => return Ok(Response::new()),
     }
 }
@@ -33,14 +39,16 @@ fn try_set_entry_price(deps: DepsMut, price: Option<Coin>) -> Result<Response, C
     return Ok(Response::new());
 }
 
-
-fn try_set_prize_pool(deps: DepsMut, target_id: u32, prize_pool: PrizePool) -> Result<Response, ContractError> {
+fn try_set_prize_pool(
+    deps: DepsMut,
+    target_id: u32,
+    prize_pool: PrizePool,
+) -> Result<Response, ContractError> {
     // transform prize_pool into vec of RegisteredPrize
-    let registered_prizes: Vec<PrizeRegistered> = vec![];
-
-    let registered_prizes: Vec<PrizeRegistered> = 
-        prize_pool.prizes.into_iter()
-        .map(|elem| PrizeRegistered::FromPrize(elem))
+    let registered_prizes: Vec<PrizeRegistered> = prize_pool
+        .prizes
+        .into_iter()
+        .map(|elem| PrizeRegistered::from_prize(deps.api, elem))
         .collect();
 
     state_writes::set_prize_pool(deps, target_id, registered_prizes)?;
@@ -48,18 +56,17 @@ fn try_set_prize_pool(deps: DepsMut, target_id: u32, prize_pool: PrizePool) -> R
     return Ok(Response::new());
 }
 
-
 fn try_start_new_lottery(deps: DepsMut) -> Result<Response, ContractError> {
     let id_new_lottery = state_reads::get_id_current_lottery(deps.as_ref())? + 1;
 
     state_writes::start_new_lottery(deps, id_new_lottery.clone())?;
-
+    
     return Ok(Response::new());
 }
 
 fn try_update_lottery_state(
     deps: DepsMut,
-    new_state: LotteryState,
+    new_state: LotteryStatus,
 ) -> Result<Response, ContractError> {
     state_writes::update_lottery_state(deps, new_state)?;
 

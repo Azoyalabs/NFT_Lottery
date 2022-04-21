@@ -1,9 +1,9 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{to_binary, Binary, CosmosMsg, StdResult, WasmMsg};
+use cosmwasm_std::{to_binary, Binary, CosmosMsg, StdResult, WasmMsg, Coin};
 
-use crate::execute_messages::msg_admin::AdminExecuteMsg;
+use crate::{execute_messages::msg_admin::AdminExecuteMsg, structs::{LotteryStatus, Prize}};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct MigrateMsg {}
@@ -17,8 +17,19 @@ pub struct InstantiateMsg {}
 pub enum ExecuteMsg {
     Admin(AdminExecuteMsg),
 
-    Register {},
+    // users 
+    Register { id_lottery: u32 },
     ClaimPrize { id_lottery: u32, id_prize: u32 },
+
+    // lottery creators 
+    CreateLottery { admins: Vec<String>, prizes: Option<Vec<Prize>> },
+    UpdateEntryPrice { id_lottery: u32, denom: String, amount: String},
+    UpdatePrizes { id_lottery: u32, prize_pool: Vec<Prize> },
+    UpdatePricing { id_lottery: u32, price: Option<Coin> },
+    UpdateLotteryStatus { id_lottery: u32, new_status: LotteryStatus },
+    
+    ValidatePrizes {id_lottery: u32, }, // transfer prizes ownership to lottery contract 
+
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
