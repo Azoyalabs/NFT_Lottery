@@ -10,7 +10,7 @@ use crate::execute_messages::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
 use crate::query::query_message::QueryMsg;
 
 use crate::error::ContractError;
-use crate::state::state_entries::{ADMIN, LOTTERY_STATE, ID_CURRENT_LOTTERY};
+use crate::state::state_entries::{ADMIN, ID_CURRENT_LOTTERY};
 use crate::structs::LotteryStatus;
 
 //use cw2::{set_contract_version, get_contract_version, ContractVersion};
@@ -30,10 +30,9 @@ pub fn instantiate(
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     ADMIN.save(deps.storage, &info.sender)?;
-    LOTTERY_STATE.save(deps.storage, &LotteryStatus::Inactive)?;
+    //LOTTERY_STATE.save(deps.storage, &LotteryStatus::Inactive)?;
 
     ID_CURRENT_LOTTERY.save(deps.storage, &0)?;
-    
 
     return Ok(Response::default());
 }

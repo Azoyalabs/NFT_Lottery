@@ -43,8 +43,10 @@ pub enum ContractError {
     #[error("Contract is Inactive")]
     ContractInactive {},
 
-
     // new version
     #[error("Lottery needs at least one admin")]
     LotteryRequiresAdmin {},
+
+    #[error("Invalid ID Lottery")]
+    InvalidIdLottery {},
 }

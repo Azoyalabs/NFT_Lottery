@@ -2,10 +2,10 @@ use cosmwasm_std::{Deps, StdResult};
 
 use crate::state::state_reads;
 
-use super::query_response::PrizePoolResponse;
+use crate::query::query_response::LotteryPrizesResponse;
 
-pub fn get_prize_pool(deps: Deps, id_lottery: u32) -> StdResult<PrizePoolResponse> {
-    let prize_pool = state_reads::get_prize_pool(deps, id_lottery).unwrap();
+pub fn get_lottery_prizes(deps: Deps, id_lottery: u32) -> StdResult<LotteryPrizesResponse> {
+    let prize_pool = state_reads::get_lottery_prizes(deps, id_lottery).unwrap();
 
     return Ok(prize_pool);
 }

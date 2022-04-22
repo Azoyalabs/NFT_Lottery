@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Api};
+use cosmwasm_std::{Addr, Api, Coin};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -42,9 +42,9 @@ impl PrizeRegistered {
     }
 }
 
-
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 pub struct LotteryData {
+    pub entry_price: Option<Coin>,
     pub status: LotteryStatus,
     pub admins: Vec<Addr>,
     pub prizes: Vec<PrizeRegistered>,
@@ -56,7 +56,9 @@ impl LotteryData {
             return None;
         }
 
-        let winners: Vec<Addr> = self.prizes.to_owned()
+        let winners: Vec<Addr> = self
+            .prizes
+            .to_owned()
             .into_iter()
             .map(|prize| prize.winner.unwrap())
             .collect();
@@ -64,4 +66,13 @@ impl LotteryData {
         return Some(winners);
     }
 
+    pub fn is_admin(&self, target: Addr) -> bool {
+        for admin in self.admins.to_owned() {
+            if target == admin {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

@@ -4,11 +4,12 @@ use cosmwasm_std::{Addr, Coin, DepsMut, Storage};
 
 use crate::state::state_entries::ADMIN;
 
-use crate::state::state_reads;
 
-use crate::state::state_entries::{LOTTERY_STATE, USER_STATE};
+use crate::state::state_entries::{
+    ENTRY_PRICE, ID_CURRENT_LOTTERY, USER_REGISTRATION_STATUS,
+};
 
-use super::state_entries::{ENTRY_PRICE, ID_CURRENT_LOTTERY, PRIZES, PRIZE_POOL_SIZES};
+use super::state_entries::LOTTERIES_DATA;
 
 pub fn update_admin(storage: &mut dyn Storage, new_admin: Addr) -> Result<(), ContractError> {
     ADMIN.save(storage, &new_admin).unwrap();
@@ -16,22 +17,30 @@ pub fn update_admin(storage: &mut dyn Storage, new_admin: Addr) -> Result<(), Co
     return Ok(());
 }
 
-pub fn update_lottery_state(deps: DepsMut, new_state: LotteryStatus) -> Result<(), ContractError> {
-    LOTTERY_STATE.save(deps.storage, &new_state)?;
+pub fn update_lottery_status(
+    deps: DepsMut,
+    id_lottery: u32,
+    new_status: LotteryStatus,
+) -> Result<(), ContractError> {
+    LOTTERIES_DATA.update(
+        deps.storage,
+        &id_lottery.to_string(),
+        |lottery_data| -> Result<_, ContractError> {
+            let mut data = lottery_data.unwrap();
+
+            data.status = new_status;
+
+            return Ok(data);
+        },
+    )?;
 
     return Ok(());
 }
 
-pub fn register(deps: DepsMut, caller: Addr) -> Result<(), ContractError> {
-    let id_current_lottery = state_reads::get_id_current_lottery(deps.as_ref())?;
-
-    USER_STATE.save(
+pub fn register(deps: DepsMut, id_lottery: u32, caller: Addr) -> Result<(), ContractError> {
+    USER_REGISTRATION_STATUS.save(
         deps.storage,
-        (
-            &id_current_lottery.to_string(),
-            &caller.to_string(),
-            "registration",
-        ),
+        (&id_lottery.to_string(), &caller.to_string()),
         &true,
     )?;
 
@@ -40,7 +49,26 @@ pub fn register(deps: DepsMut, caller: Addr) -> Result<(), ContractError> {
 
 pub fn start_new_lottery(deps: DepsMut, new_id: u32) -> Result<(), ContractError> {
     ID_CURRENT_LOTTERY.save(deps.storage, &new_id)?;
-    LOTTERY_STATE.save(deps.storage, &LotteryStatus::Registration)?;
+
+    return Ok(());
+}
+
+pub fn update_pricing(
+    deps: DepsMut,
+    id_lottery: u32,
+    entry_price: Option<Coin>,
+) -> Result<(), ContractError> {
+    LOTTERIES_DATA.update(
+        deps.storage,
+        &id_lottery.to_string(),
+        |lottery_data| -> Result<_, ContractError> {
+            let mut data = lottery_data.unwrap();
+
+            data.entry_price = entry_price;
+
+            return Ok(data);
+        },
+    )?;
 
     return Ok(());
 }
@@ -51,23 +79,17 @@ pub fn update_entry_price(deps: DepsMut, entry_price: Option<Coin>) -> Result<()
     return Ok(());
 }
 
-pub fn set_prize_pool(
+pub fn set_lottery_prizes(
     deps: DepsMut,
-    target_id: u32,
+    id_lottery: u32,
     prizes: Vec<PrizeRegistered>,
 ) -> Result<(), ContractError> {
-    let nb_prizes = prizes.len() as u32;
-
-    PRIZE_POOL_SIZES.save(deps.storage, &target_id.to_string(), &nb_prizes)?;
-
-    let lottery_id = &target_id.to_string();
-    for id_prize in 0..nb_prizes as usize {
-        PRIZES.save(
-            deps.storage,
-            (lottery_id, &id_prize.to_string()),
-            &prizes[id_prize],
-        )?;
-    }
+    LOTTERIES_DATA.update(deps.storage, &id_lottery.to_string(), |lottery_data| -> Result<_, ContractError> {
+        let mut lottery_data = lottery_data.unwrap();
+        lottery_data.prizes = prizes;
+        
+        return Ok(lottery_data);
+    })?;
 
     return Ok(());
 }

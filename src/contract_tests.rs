@@ -3,11 +3,11 @@ mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MockApi, MockQuerier};
     use cosmwasm_std::{coins, Coin, MemoryStorage, OwnedDeps, Uint128};
 
-    use crate::execute_messages::msg::{InstantiateMsg, ExecuteMsg};
+    use crate::execute_messages::msg::{ExecuteMsg, InstantiateMsg};
 
-    use crate::contract::{instantiate, execute};
+    use crate::contract::{execute, instantiate};
     use crate::execute_messages::msg_admin::AdminExecuteMsg;
-    use crate::structs::{Prize, PrizePool, LotteryStatus};
+    use crate::structs::{LotteryStatus, Prize};
 
     const TEST_DENOM: &str = "uusd";
     const TEST_CREATOR: &str = "creator";
@@ -40,41 +40,59 @@ mod tests {
     }
 
     #[test]
-    fn full_cycle() {
+    fn new_full_cycle() {
         let mut deps = instantiate_contract();
 
-        // create new lottery 
-        let msg = ExecuteMsg::Admin(AdminExecuteMsg::StartNewLottery {  });
+        // create new lottery
+        let msg = ExecuteMsg::CreateLottery {
+            entry_price: None,
+            admins: vec![TEST_CREATOR.to_string()],
+            prizes: None,
+        };
         let info = mock_info(TEST_CREATOR, &vec![]);
         let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-        
-        // set prizes  
+        // set prizes
         let nft_address = "YEP_NFT".to_string();
         let prizes: Vec<Prize> = (0..10)
             .into_iter()
-            .map(|elem| Prize{nft_address: nft_address.clone(), token_id: elem.to_string()})
+            .map(|elem| Prize {
+                nft_address: nft_address.clone(),
+                token_id: elem.to_string(),
+            })
             .collect();
 
-        let prize_pool = PrizePool {prizes: prizes};
-
-        let msg = ExecuteMsg::Admin(AdminExecuteMsg::SetPrizePool { target_id: 1, prize_pool: prize_pool });
+        let msg = ExecuteMsg::UpdatePrizes {
+            id_lottery: 0,
+            prizes: prizes,
+        };
         let info = mock_info(TEST_CREATOR, &vec![]);
         let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-
-        // pricing? later 
-
-        // lock prices 
-        // not implemented yet 
-
-        // open registration  
-        let msg = ExecuteMsg::Admin(AdminExecuteMsg::UpdateLotteryState { new_state: LotteryStatus::Registration });
+        // pricing? later
+        let pricing = Coin {
+            denom: TEST_DENOM.to_string(),
+            amount: Uint128::from(10000u32),
+        };
+        let msg = ExecuteMsg::UpdateEntryPrice {
+            id_lottery: 0,
+            entry_price: Some(pricing),
+        };
         let info = mock_info(TEST_CREATOR, &vec![]);
         let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
+        // lock prices
+        // not implemented yet
 
-        // register 
+        // open registration
+        let msg = ExecuteMsg::UpdateLotteryStatus {
+            id_lottery: 0,
+            new_status: LotteryStatus::Registration,
+        };
+        let info = mock_info(TEST_CREATOR, &vec![]);
+        let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        // register
         let msg = ExecuteMsg::Register { id_lottery: 0 };
         let info = mock_info(TEST_USER, &vec![]);
         let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
@@ -83,25 +101,26 @@ mod tests {
         let info = mock_info(TEST_USER2, &vec![]);
         let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-
-        // close registrations 
-        let msg = ExecuteMsg::Admin(AdminExecuteMsg::UpdateLotteryState { new_state: LotteryStatus::WaitingForDraw });
+        // close registrations
+        let msg = ExecuteMsg::UpdateLotteryStatus {
+            id_lottery: 0,
+            new_status: LotteryStatus::WaitingForDraw,
+        };
         let info = mock_info(TEST_CREATOR, &vec![]);
         let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
+        // draw
+        // not implemented
 
-        // draw 
-        // not implemented  
-
-
-        // allow claims 
-        let msg = ExecuteMsg::Admin(AdminExecuteMsg::UpdateLotteryState { new_state: LotteryStatus::PrizeDistribution });
+        // allow claims
+        let msg = ExecuteMsg::UpdateLotteryStatus {
+            id_lottery: 0,
+            new_status: LotteryStatus::PrizeDistribution,
+        };
         let info = mock_info(TEST_CREATOR, &vec![]);
         let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
-
 
         // claim prizes
         // need draw to work
-
     }
 }

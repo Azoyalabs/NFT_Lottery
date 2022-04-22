@@ -10,6 +10,6 @@ pub struct EntryPriceResponse {}
 pub struct WinnersResponse {}
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-pub struct PrizePoolResponse {
+pub struct LotteryPrizesResponse {
     pub prizes: Vec<PrizeRegistered>,
 }
