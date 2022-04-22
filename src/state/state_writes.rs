@@ -4,10 +4,7 @@ use cosmwasm_std::{Addr, Coin, DepsMut, Storage};
 
 use crate::state::state_entries::ADMIN;
 
-
-use crate::state::state_entries::{
-    ENTRY_PRICE, ID_CURRENT_LOTTERY, USER_REGISTRATION_STATUS,
-};
+use crate::state::state_entries::{ID_CURRENT_LOTTERY, USER_REGISTRATION_STATUS};
 
 use super::state_entries::LOTTERIES_DATA;
 
@@ -73,8 +70,10 @@ pub fn update_pricing(
     return Ok(());
 }
 
-pub fn update_entry_price(deps: DepsMut, entry_price: Option<Coin>) -> Result<(), ContractError> {
-    ENTRY_PRICE.save(deps.storage, &entry_price)?;
+pub fn increment_id_lottery(deps: DepsMut) -> Result<(), ContractError> {
+    ID_CURRENT_LOTTERY.update(deps.storage, |id_lottery| -> Result<_, ContractError> {
+        return Ok(id_lottery + 1);
+    })?;
 
     return Ok(());
 }
@@ -84,12 +83,16 @@ pub fn set_lottery_prizes(
     id_lottery: u32,
     prizes: Vec<PrizeRegistered>,
 ) -> Result<(), ContractError> {
-    LOTTERIES_DATA.update(deps.storage, &id_lottery.to_string(), |lottery_data| -> Result<_, ContractError> {
-        let mut lottery_data = lottery_data.unwrap();
-        lottery_data.prizes = prizes;
-        
-        return Ok(lottery_data);
-    })?;
+    LOTTERIES_DATA.update(
+        deps.storage,
+        &id_lottery.to_string(),
+        |lottery_data| -> Result<_, ContractError> {
+            let mut lottery_data = lottery_data.unwrap();
+            lottery_data.prizes = prizes;
+
+            return Ok(lottery_data);
+        },
+    )?;
 
     return Ok(());
 }

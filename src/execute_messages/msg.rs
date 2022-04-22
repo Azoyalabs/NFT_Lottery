@@ -43,6 +43,7 @@ pub enum ExecuteMsg {
         id_lottery: u32,
         entry_price: Option<Coin>,
     },
+
     UpdateLotteryStatus {
         id_lottery: u32,
         new_status: LotteryStatus,
@@ -52,7 +53,15 @@ pub enum ExecuteMsg {
         id_lottery: u32,
     }, // transfer prizes ownership to lottery contract
 
-    Withdraw { id_lottery: u32, denom: String, amount: String },
+    Withdraw {
+        id_lottery: u32,
+        denom: String,
+        amount: String,
+    },
+
+    DrawLottery {
+        id_lottery: u32
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]

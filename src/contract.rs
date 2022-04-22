@@ -11,7 +11,6 @@ use crate::query::query_message::QueryMsg;
 
 use crate::error::ContractError;
 use crate::state::state_entries::{ADMIN, ID_CURRENT_LOTTERY};
-use crate::structs::LotteryStatus;
 
 //use cw2::{set_contract_version, get_contract_version, ContractVersion};
 use cw2::set_contract_version;

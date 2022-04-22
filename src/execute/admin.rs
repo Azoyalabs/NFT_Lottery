@@ -1,10 +1,9 @@
-use cosmwasm_std::{Coin, DepsMut, Env, MessageInfo, Response};
+use cosmwasm_std::{DepsMut, Env, MessageInfo, Response};
 
 use crate::error::ContractError;
 
 use crate::execute_messages::msg_admin::AdminExecuteMsg;
-use crate::state::{state_reads, state_writes};
-use crate::structs::{PrizePool, PrizeRegistered};
+use crate::state::state_reads;
 
 pub fn dispatch_admin(
     deps: DepsMut,
@@ -30,4 +29,3 @@ fn try_withdraw(
 ) -> Result<Response, ContractError> {
     return Ok(Response::new());
 }
-

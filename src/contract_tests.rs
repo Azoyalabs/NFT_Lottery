@@ -6,7 +6,7 @@ mod tests {
     use crate::execute_messages::msg::{ExecuteMsg, InstantiateMsg};
 
     use crate::contract::{execute, instantiate};
-    use crate::execute_messages::msg_admin::AdminExecuteMsg;
+
     use crate::structs::{LotteryStatus, Prize};
 
     const TEST_DENOM: &str = "uusd";
@@ -76,13 +76,10 @@ mod tests {
         };
         let msg = ExecuteMsg::UpdateEntryPrice {
             id_lottery: 0,
-            entry_price: Some(pricing),
+            entry_price: Some(pricing.clone()),
         };
         let info = mock_info(TEST_CREATOR, &vec![]);
         let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
-
-        // lock prices
-        // not implemented yet
 
         // open registration
         let msg = ExecuteMsg::UpdateLotteryStatus {
@@ -94,11 +91,11 @@ mod tests {
 
         // register
         let msg = ExecuteMsg::Register { id_lottery: 0 };
-        let info = mock_info(TEST_USER, &vec![]);
+        let info = mock_info(TEST_USER, &vec![pricing.clone()]);
         let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         let msg = ExecuteMsg::Register { id_lottery: 0 };
-        let info = mock_info(TEST_USER2, &vec![]);
+        let info = mock_info(TEST_USER2, &vec![pricing.clone()]);
         let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // close registrations
@@ -111,7 +108,7 @@ mod tests {
 
         // draw
         // not implemented
-
+        
         // allow claims
         let msg = ExecuteMsg::UpdateLotteryStatus {
             id_lottery: 0,

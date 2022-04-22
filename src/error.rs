@@ -9,6 +9,9 @@ pub enum ContractError {
     #[error("Never")]
     Never {},
 
+    #[error("not Implemented")]
+    NotImplemented {},
+
     #[error("Unauthorized")]
     Unauthorized {},
 
@@ -49,4 +52,27 @@ pub enum ContractError {
 
     #[error("Invalid ID Lottery")]
     InvalidIdLottery {},
+
+    #[error("Invalid ID Prize")]
+    InvalidIdPrize {},
+
+    #[error("Cannot Claim Prize - Lottery not finished")]
+    LotteryNotFinished {},
+
+    #[error("Cannot Claim Prize - Not prize winner")]
+    NotPrizeWinner {},
+
+
+    // payable for lottery
+    #[error("Lottery is free")]
+    NotPayableLottery {},
+
+    #[error("Lottery requires an entry fee")]
+    PayableLottery {},
+
+    #[error("Lottery only accepts single currency")]
+    SingleCurrencyLottery {},
+    
+    #[error("Invalid amount for lottery entry price")]
+    InvalidAmountEntryPrice {},
 }

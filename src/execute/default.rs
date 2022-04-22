@@ -2,9 +2,11 @@ use cosmwasm_std::{Addr, Coin, DepsMut, Env, MessageInfo, Response};
 
 use crate::error::ContractError;
 use crate::execute_messages::msg::ExecuteMsg;
-use crate::state::state_entries::{ID_CURRENT_LOTTERY, LOTTERIES_DATA};
+use crate::state::state_entries::{LOTTERIES_DATA};
 use crate::state::{state_reads, state_writes};
 use crate::structs::{LotteryData, LotteryStatus, Prize, PrizeRegistered};
+
+use rand::rngs::StdRng;
 
 pub fn dispatch_default(
     deps: DepsMut,
@@ -12,6 +14,8 @@ pub fn dispatch_default(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
+    // move common checks here? How?
+
     match msg {
         ExecuteMsg::Register { id_lottery } => try_register(deps, info, id_lottery),
         ExecuteMsg::CreateLottery {
@@ -30,26 +34,78 @@ pub fn dispatch_default(
             id_lottery,
             entry_price,
         } => try_update_entry_price(deps, info, id_lottery, entry_price),
-        ExecuteMsg::Withdraw { id_lottery, denom, amount } => try_withdraw(deps, info, id_lottery, denom, amount),
-        ExecuteMsg::ClaimPrize { id_lottery, id_prize } => try_claim_prize(deps, info, id_lottery, id_prize),
+        ExecuteMsg::Withdraw {
+            id_lottery,
+            denom,
+            amount,
+        } => try_withdraw(deps, info, id_lottery, denom, amount),
+        ExecuteMsg::ClaimPrize {
+            id_lottery,
+            id_prize,
+        } => try_claim_prize(deps, info, id_lottery, id_prize),
+        ExecuteMsg::DrawLottery { id_lottery } => try_draw_lottery(deps, info, id_lottery),
+
+
         _ => Err(ContractError::Never {}),
     }
 }
 
-fn try_claim_prize(deps: DepsMut, info: MessageInfo, id_lottery: u32, id_prize: u32) -> Result<Response, ContractError> {
-    
-    return Ok(Response::new());
-}
 
-fn try_withdraw(deps: DepsMut, info: MessageInfo, id_lottery: u32, denom: String, amount: String) -> Result<Response, ContractError> {
+fn try_draw_lottery(deps: DepsMut, info: MessageInfo, id_lottery: u32) -> Result<Response, ContractError> {
     if !state_reads::is_valid_id_lottery(deps.as_ref(), id_lottery)? {
         return Err(ContractError::InvalidIdLottery {});
     }
 
     if !state_reads::is_lottery_admin(deps.as_ref(), id_lottery, info.sender.clone())? {
         return Err(ContractError::Unauthorized {});
-    }    
+    }
 
+    return Ok(
+        Response::new()
+    );
+}
+
+fn try_claim_prize(
+    deps: DepsMut,
+    info: MessageInfo,
+    id_lottery: u32,
+    id_prize: u32,
+) -> Result<Response, ContractError> {
+    if !state_reads::is_valid_id_lottery(deps.as_ref(), id_lottery)? {
+        return Err(ContractError::InvalidIdLottery {});
+    }
+
+    if !state_reads::check_lottery_prizes_claimable(deps.as_ref(), id_lottery)? {
+        return Err(ContractError::LotteryNotFinished {  });
+    }
+
+    if !state_reads::check_is_valid_prize_id(deps.as_ref(), id_lottery, id_prize)? {
+        return Err(ContractError::InvalidIdPrize {  });
+    }
+
+    if !state_reads::check_is_prize_winner(deps.as_ref(), id_lottery, id_prize, info.sender.clone())? {
+        return Err(ContractError::NotPrizeWinner {  });
+    }
+
+    return Err(ContractError::NotImplemented{});
+
+    return Ok(Response::new());
+}
+
+fn try_withdraw(
+    deps: DepsMut,
+    info: MessageInfo,
+    id_lottery: u32,
+    _denom: String,
+    _amount: String,
+) -> Result<Response, ContractError> {
+    if !state_reads::is_valid_id_lottery(deps.as_ref(), id_lottery)? {
+        return Err(ContractError::InvalidIdLottery {});
+    }
+
+    if !state_reads::is_lottery_admin(deps.as_ref(), id_lottery, info.sender.clone())? {
+        return Err(ContractError::Unauthorized {});
+    }
 
     return Ok(Response::new());
 }
@@ -146,9 +202,9 @@ fn try_create_lottery(
         prizes: registered_prizes,
     };
 
-    let current_id = ID_CURRENT_LOTTERY.load(deps.storage)?;
+    let current_id = state_reads::get_id_current_lottery(deps.as_ref())?;
     LOTTERIES_DATA.save(deps.storage, &current_id.to_string(), &lottery_data)?;
-    ID_CURRENT_LOTTERY.save(deps.storage, &(current_id + 1))?;
+    state_writes::increment_id_lottery(deps)?;
 
     return Ok(Response::new());
 }
@@ -165,6 +221,9 @@ fn try_register(
     if state_reads::is_registered(deps.as_ref(), id_lottery, info.sender.clone())? {
         return Err(ContractError::AlreadyRegistered {});
     }
+
+    // check pricing and stuff
+    state_reads::check_valid_funds_for_lottery(deps.as_ref(), id_lottery, info.funds)?;
 
     state_writes::register(deps, id_lottery, info.sender.clone())?;
 
