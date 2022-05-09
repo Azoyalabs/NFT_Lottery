@@ -7,9 +7,11 @@ use crate::execute::default::dispatch_default;
 
 use crate::execute_messages::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
 
+use crate::query::query_execute::get_lottery_prizes;
 use crate::query::query_message::QueryMsg;
 
 use crate::error::ContractError;
+use crate::randomness::state_entries::RANDOM_NONCE;
 use crate::state::state_entries::{ADMIN, ID_CURRENT_LOTTERY};
 
 //use cw2::{set_contract_version, get_contract_version, ContractVersion};
@@ -31,6 +33,7 @@ pub fn instantiate(
     ADMIN.save(deps.storage, &info.sender)?;
     //LOTTERY_STATE.save(deps.storage, &LotteryStatus::Inactive)?;
 
+    RANDOM_NONCE.save(deps.storage, &0)?;
     ID_CURRENT_LOTTERY.save(deps.storage, &0)?;
 
     return Ok(Response::default());
@@ -58,8 +61,9 @@ pub fn execute(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
+        QueryMsg::PrizePool { id_lottery } => to_binary(&get_lottery_prizes(deps, id_lottery)?),
         _ => return to_binary(&42),
     }
 }

@@ -1,12 +1,14 @@
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MockApi, MockQuerier};
-    use cosmwasm_std::{coins, Coin, MemoryStorage, OwnedDeps, Uint128};
+    use cosmwasm_std::{coins, from_binary, Coin, MemoryStorage, OwnedDeps, Uint128};
 
     use crate::execute_messages::msg::{ExecuteMsg, InstantiateMsg};
 
-    use crate::contract::{execute, instantiate};
+    use crate::contract::{execute, instantiate, query};
 
+    use crate::query::query_message::QueryMsg;
+    use crate::query::query_response::LotteryPrizesResponse;
     use crate::structs::{LotteryStatus, Prize};
 
     const TEST_DENOM: &str = "uusd";
@@ -57,7 +59,7 @@ mod tests {
         let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // set prizes
-        let nft_address = "YEP_NFT".to_string();
+        let nft_address = "TEST_NFT".to_string();
         let prizes: Vec<Prize> = (0..10)
             .into_iter()
             .map(|elem| Prize {
@@ -112,9 +114,9 @@ mod tests {
 
         // draw
         // not implemented
-        let _msg = ExecuteMsg::DrawLottery { id_lottery: 0 };
-        let _info = mock_info(TEST_CREATOR, &vec![]);
-        //let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+        let msg = ExecuteMsg::DrawLottery { id_lottery: 0 };
+        let info = mock_info(TEST_CREATOR, &vec![]);
+        let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // allow claims
         let msg = ExecuteMsg::UpdateLotteryStatus {
@@ -126,5 +128,13 @@ mod tests {
 
         // claim prizes
         // need draw to work
+
+        let msg = QueryMsg::PrizePool { id_lottery: 0 };
+        let res = query(deps.as_ref(), mock_env(), msg).unwrap();
+
+        //let rslt: WinnersResponse = from_binary(&res).unwrap();
+        let rslt: LotteryPrizesResponse = from_binary(&res).unwrap();
+
+        println!("{:?}", rslt);
     }
 }
