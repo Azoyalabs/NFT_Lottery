@@ -1,6 +1,8 @@
 use crate::structs::PrizeRegistered;
 use crate::{error::ContractError, structs::LotteryStatus};
 use cosmwasm_std::{Addr, Coin, DepsMut, Storage};
+use rand::RngCore;
+use rand_pcg::Pcg64;
 
 use crate::state::state_entries::ADMIN;
 
@@ -39,6 +41,17 @@ pub fn register(deps: DepsMut, id_lottery: u32, caller: Addr) -> Result<(), Cont
         deps.storage,
         (&id_lottery.to_string(), &caller.to_string()),
         &true,
+    )?;
+
+    LOTTERIES_DATA.update(
+        deps.storage,
+        &id_lottery.to_string(),
+        |lottery_data| -> Result<_, ContractError> {
+            let mut lottery_data = lottery_data.unwrap();
+            lottery_data.participants.push(caller);
+
+            return Ok(lottery_data);
+        },
     )?;
 
     return Ok(());
@@ -89,6 +102,27 @@ pub fn set_lottery_prizes(
         |lottery_data| -> Result<_, ContractError> {
             let mut lottery_data = lottery_data.unwrap();
             lottery_data.prizes = prizes;
+
+            return Ok(lottery_data);
+        },
+    )?;
+
+    return Ok(());
+}
+
+pub fn draw_winners(deps: DepsMut, id_lottery: u32, mut rng: Pcg64) -> Result<(), ContractError> {
+    LOTTERIES_DATA.update(
+        deps.storage,
+        &id_lottery.to_string(),
+        |lottery_data| -> Result<_, ContractError> {
+            let mut lottery_data = lottery_data.unwrap();
+            let nb_participants = lottery_data.participants.len() as u32;
+
+            for id_prize in 0..lottery_data.prizes.len() {
+                let id_winner = (rng.next_u32() % nb_participants) as usize;
+                lottery_data.prizes[id_prize].winner =
+                    Some(lottery_data.participants[id_winner].to_owned());
+            }
 
             return Ok(lottery_data);
         },

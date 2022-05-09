@@ -14,6 +14,8 @@ mod tests {
     const TEST_USER: &str = "user";
     const TEST_USER2: &str = "user2";
 
+    const TESTNET_BEACON: &str = "terra1a62jxn3hh54fa5slan4dkd7u6v4nzgz3pjhygm";
+
     const _TEST_PRICE: u64 = 10000000;
 
     const _TEST_INVALID_DENOM: &str = "notuusd";
@@ -24,7 +26,9 @@ mod tests {
             amount: Uint128::from(100u64),
         }]);
 
-        let msg = InstantiateMsg {};
+        let msg = InstantiateMsg {
+            beacon_address: TESTNET_BEACON.to_string(),
+        };
         let info = mock_info(TEST_CREATOR, &coins(1000, TEST_DENOM));
 
         // we can just call .unwrap() to assert this was a success
@@ -108,7 +112,10 @@ mod tests {
 
         // draw
         // not implemented
-        
+        let _msg = ExecuteMsg::DrawLottery { id_lottery: 0 };
+        let _info = mock_info(TEST_CREATOR, &vec![]);
+        //let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+
         // allow claims
         let msg = ExecuteMsg::UpdateLotteryStatus {
             id_lottery: 0,

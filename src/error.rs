@@ -62,7 +62,6 @@ pub enum ContractError {
     #[error("Cannot Claim Prize - Not prize winner")]
     NotPrizeWinner {},
 
-
     // payable for lottery
     #[error("Lottery is free")]
     NotPayableLottery {},
@@ -72,7 +71,7 @@ pub enum ContractError {
 
     #[error("Lottery only accepts single currency")]
     SingleCurrencyLottery {},
-    
+
     #[error("Invalid amount for lottery entry price")]
     InvalidAmountEntryPrice {},
 }

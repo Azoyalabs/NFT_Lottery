@@ -13,7 +13,9 @@ pub struct MigrateMsg {}
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 #[serde(rename_all = "snake_case")]
-pub struct InstantiateMsg {}
+pub struct InstantiateMsg {
+    pub beacon_address: String,
+}
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 #[serde(rename_all = "snake_case")]
@@ -58,9 +60,8 @@ pub enum ExecuteMsg {
         denom: String,
         amount: String,
     },
-
     DrawLottery {
-        id_lottery: u32
+        id_lottery: u32,
     },
 }
 

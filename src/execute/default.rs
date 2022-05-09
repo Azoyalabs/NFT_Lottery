@@ -2,11 +2,10 @@ use cosmwasm_std::{Addr, Coin, DepsMut, Env, MessageInfo, Response};
 
 use crate::error::ContractError;
 use crate::execute_messages::msg::ExecuteMsg;
-use crate::state::state_entries::{LOTTERIES_DATA};
+use crate::randomness::random_source::get_source_rng;
+use crate::state::state_entries::LOTTERIES_DATA;
 use crate::state::{state_reads, state_writes};
 use crate::structs::{LotteryData, LotteryStatus, Prize, PrizeRegistered};
-
-use rand::rngs::StdRng;
 
 pub fn dispatch_default(
     deps: DepsMut,
@@ -45,13 +44,15 @@ pub fn dispatch_default(
         } => try_claim_prize(deps, info, id_lottery, id_prize),
         ExecuteMsg::DrawLottery { id_lottery } => try_draw_lottery(deps, info, id_lottery),
 
-
         _ => Err(ContractError::Never {}),
     }
 }
 
-
-fn try_draw_lottery(deps: DepsMut, info: MessageInfo, id_lottery: u32) -> Result<Response, ContractError> {
+fn try_draw_lottery(
+    deps: DepsMut,
+    info: MessageInfo,
+    id_lottery: u32,
+) -> Result<Response, ContractError> {
     if !state_reads::is_valid_id_lottery(deps.as_ref(), id_lottery)? {
         return Err(ContractError::InvalidIdLottery {});
     }
@@ -60,9 +61,17 @@ fn try_draw_lottery(deps: DepsMut, info: MessageInfo, id_lottery: u32) -> Result
         return Err(ContractError::Unauthorized {});
     }
 
-    return Ok(
-        Response::new()
-    );
+    // from https://rust-random.github.io/book/guide-seeding.html
+    // call beacon to get random, add nonce and
+    // for initial, use current random beacon value, + round beacon? then later can just use current nonce or something
+    // use terrand for seed?  https://docs.terrand.dev/
+    // will need to plug in my random logic
+    let rng = get_source_rng(deps.as_ref());
+    state_writes::draw_winners(deps, id_lottery, rng)?;
+
+    //return Err(ContractError::NotImplemented {  });
+
+    return Ok(Response::new());
 }
 
 fn try_claim_prize(
@@ -76,20 +85,25 @@ fn try_claim_prize(
     }
 
     if !state_reads::check_lottery_prizes_claimable(deps.as_ref(), id_lottery)? {
-        return Err(ContractError::LotteryNotFinished {  });
+        return Err(ContractError::LotteryNotFinished {});
     }
 
     if !state_reads::check_is_valid_prize_id(deps.as_ref(), id_lottery, id_prize)? {
-        return Err(ContractError::InvalidIdPrize {  });
+        return Err(ContractError::InvalidIdPrize {});
     }
 
-    if !state_reads::check_is_prize_winner(deps.as_ref(), id_lottery, id_prize, info.sender.clone())? {
-        return Err(ContractError::NotPrizeWinner {  });
+    if !state_reads::check_is_prize_winner(
+        deps.as_ref(),
+        id_lottery,
+        id_prize,
+        info.sender.clone(),
+    )? {
+        return Err(ContractError::NotPrizeWinner {});
     }
 
-    return Err(ContractError::NotImplemented{});
+    return Err(ContractError::NotImplemented {});
 
-    return Ok(Response::new());
+    //return Ok(Response::new());
 }
 
 fn try_withdraw(
@@ -200,6 +214,7 @@ fn try_create_lottery(
         status: LotteryStatus::SettingUp,
         admins: admins,
         prizes: registered_prizes,
+        participants: vec![],
     };
 
     let current_id = state_reads::get_id_current_lottery(deps.as_ref())?;

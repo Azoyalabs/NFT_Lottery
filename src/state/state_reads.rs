@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Deps, Coin};
+use cosmwasm_std::{Addr, Coin, Deps};
 //use cw721::Approval;
 
 use crate::error::ContractError;
@@ -65,7 +65,11 @@ pub fn check_lottery_prizes_claimable(deps: Deps, id_lottery: u32) -> Result<boo
     return Ok(lottery_data.status == LotteryStatus::PrizeDistribution);
 }
 
-pub fn check_valid_funds_for_lottery(deps: Deps, id_lottery: u32, funds: Vec<Coin>) -> Result<bool, ContractError> {
+pub fn check_valid_funds_for_lottery(
+    deps: Deps,
+    id_lottery: u32,
+    funds: Vec<Coin>,
+) -> Result<bool, ContractError> {
     let lottery_data = LOTTERIES_DATA.load(deps.storage, &id_lottery.to_string())?;
     let pricing = lottery_data.entry_price;
 
@@ -73,16 +77,18 @@ pub fn check_valid_funds_for_lottery(deps: Deps, id_lottery: u32, funds: Vec<Coi
         None => return _check_valid_funds_for_lottery_non_payable(funds),
         Some(pricing) => return _check_valid_funds_for_lottery_payable(pricing, funds),
     }
-
 }
 
-fn _check_valid_funds_for_lottery_payable(pricing: Coin, funds: Vec<Coin>) -> Result<bool, ContractError> {
+fn _check_valid_funds_for_lottery_payable(
+    pricing: Coin,
+    funds: Vec<Coin>,
+) -> Result<bool, ContractError> {
     if funds.len() == 0 {
-        return Err(ContractError::PayableLottery{});
+        return Err(ContractError::PayableLottery {});
     } else if funds.len() > 1 {
-        return Err(ContractError::SingleCurrencyLottery{});
+        return Err(ContractError::SingleCurrencyLottery {});
     } else if funds[0] != pricing {
-        return Err(ContractError::InvalidAmountEntryPrice {  });
+        return Err(ContractError::InvalidAmountEntryPrice {});
     }
 
     return Ok(true);
@@ -90,27 +96,35 @@ fn _check_valid_funds_for_lottery_payable(pricing: Coin, funds: Vec<Coin>) -> Re
 
 fn _check_valid_funds_for_lottery_non_payable(funds: Vec<Coin>) -> Result<bool, ContractError> {
     if funds.len() > 0 {
-        return Err(ContractError::NotPayableLottery{});
+        return Err(ContractError::NotPayableLottery {});
     }
 
     return Ok(true);
 }
 
-pub fn check_is_valid_prize_id(deps: Deps, id_lottery: u32, id_prize: u32) -> Result<bool, ContractError> {
+pub fn check_is_valid_prize_id(
+    deps: Deps,
+    id_lottery: u32,
+    id_prize: u32,
+) -> Result<bool, ContractError> {
     let lottery_data = LOTTERIES_DATA.load(deps.storage, &id_lottery.to_string())?;
 
     return Ok(id_prize < lottery_data.prizes.len() as u32);
 }
 
-pub fn check_is_prize_winner(deps: Deps, id_lottery: u32, id_prize: u32, caller: Addr) -> Result<bool, ContractError> {
+pub fn check_is_prize_winner(
+    deps: Deps,
+    id_lottery: u32,
+    id_prize: u32,
+    caller: Addr,
+) -> Result<bool, ContractError> {
     let lottery_data = LOTTERIES_DATA.load(deps.storage, &id_lottery.to_string())?;
     let prize_data = lottery_data.prizes[id_prize as usize].to_owned();
 
     match prize_data.winner {
         None => return Ok(false),
-        Some(address_winner) => return Ok(address_winner == caller)
+        Some(address_winner) => return Ok(address_winner == caller),
     };
-
 }
 
 //pub fn is_winner(deps: Deps, )

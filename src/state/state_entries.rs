@@ -11,8 +11,6 @@ pub const ID_CURRENT_LOTTERY: Item<u32> = Item::new("id_current_lottery");
 // id lottery, caller address
 pub const REGISTRATION_STATUS: Map<(&str, &str), bool> = Map::new("registration_status");
 
-
-
 // new version
 pub const LOTTERIES_DATA: Map<&str, LotteryData> = Map::new("lotteries_data");
 // map registration status accross lotteries: id lottery, address user

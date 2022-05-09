@@ -48,6 +48,7 @@ pub struct LotteryData {
     pub status: LotteryStatus,
     pub admins: Vec<Addr>,
     pub prizes: Vec<PrizeRegistered>,
+    pub participants: Vec<Addr>,
 }
 
 impl LotteryData {
