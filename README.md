@@ -12,19 +12,19 @@ Contract is still in development: we are working on adding safety features to sa
 
 1- Create a lottery  
 2- Set participation price  
-3- Set prizes 
-4- Lock prizes and ensure validity (NFTs' ownership is transferred to the lottery contract)  
-5- Allow registrations 
-6- Lock registrations
-7- Draw Lottery winners 
-8- Enable Players to withdraw won prizes
+3- Set prizes   
+4- Lock prizes and ensure validity (NFTs' ownership is transferred to the lottery contract)    
+5- Allow registrations   
+6- Lock registrations  
+7- Draw Lottery winners   
+8- Enable Players to withdraw won prizes  
 
 
 ## Coming Soon  
 - Adding Marketing information  
 - Allow payment in CW20 
 - Safeguard funds (allow users to un-register)
-
+- Link with the Subscription contract  
 
 ## Exploits Prevention Remarks  
 Organizer can lock up funds if no possibility of refund. Either allow refunding all the way until prize winners are drawn, or set up a max lifetime for the lottery and draw before locking up the lottery state and allowing all users withdrawals.
