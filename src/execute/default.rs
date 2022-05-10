@@ -1,7 +1,8 @@
-use cosmwasm_std::{Addr, Coin, DepsMut, Env, MessageInfo, Response};
+use cosmwasm_std::{Addr, Coin, DepsMut, Env, MessageInfo, Response, WasmMsg};
 
 use crate::error::ContractError;
 use crate::execute_messages::msg::ExecuteMsg;
+use crate::nfts::{is_owner_nft, prep_msg_transfer_ownership_nft};
 use crate::randomness::random_source::get_source_rng;
 use crate::state::state_entries::LOTTERIES_DATA;
 use crate::state::{state_reads, state_writes};
@@ -243,4 +244,21 @@ fn try_register(
     state_writes::register(deps, id_lottery, info.sender.clone())?;
 
     return Ok(Response::new());
+}
+
+fn try_lock_prizes(deps: DepsMut, env: Env, id_lottery: u32) -> Result<Response, ContractError> {
+    let prizes = state_reads::get_lottery_prizes(deps.as_ref(), id_lottery).unwrap().prizes;
+    let contract_addr = env.contract.address.to_string();
+
+    let mut transfer_msgs: Vec<WasmMsg> = vec![];
+    for prize in prizes {
+        if !is_owner_nft(deps.as_ref(), env.contract.address.clone(), prize.nft_address.to_string(), prize.token_id.clone())  {
+            let msg = prep_msg_transfer_ownership_nft(contract_addr.clone(), prize.nft_address.to_string(), prize.token_id.clone());
+            transfer_msgs.push(msg);
+        }
+    }
+
+    return Ok(
+        Response::new().add_messages(transfer_msgs)
+    );
 }

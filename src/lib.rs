@@ -10,6 +10,7 @@ pub mod query;
 pub mod state;
 pub mod structs;
 
+pub mod nfts;
 pub mod randomness;
 
 pub use crate::error::ContractError;

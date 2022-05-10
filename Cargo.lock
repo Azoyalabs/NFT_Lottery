@@ -182,6 +182,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw721"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d8ba531542c3ae8c36b1f5cdb2b85fd79660765bb845fca4506a2374f42cdbf"
+dependencies = [
+ "cosmwasm-std",
+ "cw0",
+ "schemars",
+ "serde",
+]
+
+[[package]]
 name = "der"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -356,6 +368,7 @@ dependencies = [
  "cw0",
  "cw2",
  "cw20",
+ "cw721",
  "rand",
  "rand_pcg",
  "rand_seeder",
